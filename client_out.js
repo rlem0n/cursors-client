@@ -837,7 +837,7 @@ var w = window,
 		x.onmouseup = va;
 		I = z.getElementById("noCursorLock");
 		C = z.getElementById("noDrawings");
-		null != localStorage && (I.checked = "1" == w.localStorage.getItem("noCursorLock") ? !0 : !1, C.checked = "1" == w.localStorage.getItem("noDrawings") ? !0 : !1);
+		null != localStorage && (I.checked = "1" == localStorage.noCursorLock ? !0 : !1, C.checked = "1" == localStorage.noDrawings ? !0 : !1);
 		w.onbeforeunload = Ba;
 		x.requestPointerLock = x.requestPointerLock || x.mozRequestPointerLock || x.webkitRequestPointerLock;
 		E.style.cursor = "none";
