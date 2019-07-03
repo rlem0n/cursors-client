@@ -824,11 +824,11 @@ var w = window,
 		E = z.getElementById("canvas");
 		a = E.getContext("2d");
 		x = z.getElementById("canvasContainer") || E;
-		try {
+		/*try {
 			w.top.location.origin != w.location.origin && aa()
 		} catch (k) {
 			aa()
-		}
+		}*/
 		E.width = 800 * R;
 		E.height = 600 * R;
 		a.scale(R, R);
