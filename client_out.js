@@ -23,9 +23,9 @@ var w = window,
 		a.font = "35px NovaSquare";
 		a.fillText("Please do not embed our website, thank you.", 400 - a.measureText("Please do not embed our website, thank you.").width / 2, 300);
 		a.font = "16px NovaSquare";
-		a.fillText("Play the game on http://cursors.io/", 400 - a.measureText("Play the game on http://cursors.io/").width / 2, 330);
-		top.location = "http://cursors.io";
-		throw "Please do not embed our website, thank you.";
+		a.fillText("Play the game on https://mcursors.netlify.com", 400 - a.measureText("Play the game on https://mcursors.netlify.com").width / 2, 330);
+		//top.location = "https://mcursors.netlify.com";
+		//throw "Please do not embed our website, thank you.";
 	}
 
 	function sa(a) {
