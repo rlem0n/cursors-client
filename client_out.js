@@ -1,6 +1,10 @@
-var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
+//var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
+var serverurl = "ws://159.65.78.102:2828/"
 
-var multiclick = 10
+var multiclick = 50
+
+var posX = null;
+var posY = null;
 
 function ra(a) {
     return a << 1
@@ -168,6 +172,7 @@ function onSocketConnect() {
 function onSocketClose(e) {
     Z();
     console.log("Socket closed: " + e.reason)
+	socketConnect()
 }
 
 function onSocketError(e) {
@@ -243,6 +248,7 @@ function socketOnMessage(a) {
                         f.newX = h;
                         f.newY = g;
                         f.time = t
+						
                     } else v[f] = new ja(h, g)
             }
             for (e = 0; e < d.length; e++) delete v[d[e]];
@@ -318,8 +324,14 @@ function ua(a, b) {
         dv.setUint16(1, a, !0);
         dv.setUint16(3, b, !0);
         dv.setUint32(5, u, !0);
+		var timeout = 10
         for (var i = 0; i < multiclick; i++) {
-			q.send(c)
+			setTimeout(function() {
+				q.send(c)
+				console.log(i)
+				
+			}, timeout)
+			timeout = timeout + 10
 		}
     }
 }
@@ -532,8 +544,8 @@ function na(n) {
 }
 
 function ja(a, b) {
-    this.oldX = this.newX = a;
-    this.oldY = this.newY = b;
+    posX = this.oldX = this.newX = a;
+    posY = this.oldY = this.newY = b;
     this.time = t
 }
 
