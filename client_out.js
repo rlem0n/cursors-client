@@ -1,5 +1,5 @@
 //var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
-var serverurl = "wss://159.65.78.102:2828/"
+var serverurl = "ws://159.65.78.102:2828/"
 
 var multiclick = 50
 
