@@ -10,7 +10,8 @@ cheatDiv.innerHTML += "<br>";
 cheatDiv.innerHTML += "<br>";
 cheatDiv.innerHTML += `<div>Message: <input id="message" placeholder="message"></input> Font: <input type="number" id="fontOfMessage" placeholder="font" value="2"></input></div>`
 cheatDiv.innerHTML += `<div>Set multiclick to: <input value="10" type="number" id="multiclickcount" placeholder="count"></input><button onclick="setMulticlick()">set</button></div>`
-cheatDiv.innerHTML += `<div>Press to draw custom image: </input><button onclick="drawArray(customImage)">draw</button></div>`
+cheatDiv.innerHTML +=`<div>Set drawing scale to: <input value="1" type="number" id="drawingscale" placeholder="scale"></input><button onclick="setDrawingScale()">set</button</div>`
+cheatDiv.innerHTML += `<div>Press to draw custom image: <button onclick="drawArray(customImage)">draw</button></div>`
 cheatDiv.innerHTML += "<br>";
 cheatDiv.innerHTML +=`<div><font size="5px">Images:</font></div>`;
 cheatDiv.innerHTML +=`<div><button onclick="drawImage('cursorInRect')">cursor in rect</button><button onclick="drawImage('cursor')">cursor</button><button onclick="drawImage('cutesmile')">cutesmile</button></div>`
@@ -21,6 +22,7 @@ cheatDiv.innerHTML += `<div>To draw arrows press they</div>`
 cheatDiv.innerHTML += `<div>To save pos x and pos y press page down. When you drawing your array or drawings you need to save the pos</div>`
 cheatDiv.innerHTML += `<div>100 clicks per second</div>`
 cheatDiv.innerHTML += `<div>To draw your image open console (F12 or ctrl+shift+i) and write (without quotes): "customImage = yourimagearray" and press button custom image</div>`
+
 
 
 //cheatDiv.innerHTML +=`<div></div>`
@@ -190,6 +192,11 @@ function drawArray(array, x = savedx, y = savedy, timeout = 70) {
 function setMulticlick() {
 	var to = document.getElementById("multiclickcount").value;
 	multiclick = parseInt(to, 10)
+}
+
+function setDrawingScale() {
+	var to = document.getElementById("drawingscale").value;
+	drawingScale = parseInt(to, 10)
 }
 
 var multiclick = 10
