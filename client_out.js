@@ -1,10 +1,256 @@
-//var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
-var serverurl = "ws://159.65.78.102:2828/"
+var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
+//var serverurl = "ws://159.65.78.102:2828/"
+//var serverurl = "ws://mpp-proxy-new-8--gabrielmakiewic.repl.co/?target=ws://159.65.78.102:2828&origin=http://cursors.io"
+var drawing = false;
+var drawingScale = 1;
+var customImage = [];
+var cheatDiv = document.createElement("div");
+cheatDiv.style["border"] = "3px solid currentColor";
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += `<div>Message: <input id="message" placeholder="message"></input> Font: <input type="number" id="fontOfMessage" placeholder="font" value="2"></input></div>`
+cheatDiv.innerHTML += `<div>Set multiclick to: <input value="10" type="number" id="multiclickcount" placeholder="count"></input><button onclick="setMulticlick()">set</button></div>`
+cheatDiv.innerHTML += `<div>Press to draw custom image: </input><button onclick="drawArray(customImage)">draw</button></div>`
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML +=`<div><font size="5px">Images:</font></div>`;
+cheatDiv.innerHTML +=`<div><button onclick="drawImage('cursorInRect')">cursor in rect</button><button onclick="drawImage('cursor')">cursor</button><button onclick="drawImage('cutesmile')">cutesmile</button></div>`
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += `<div><font size="5px">Instructons:</font></div>`
+cheatDiv.innerHTML += `<div>To draw message press page up</div>`
+cheatDiv.innerHTML += `<div>To draw arrows press they</div>`
+cheatDiv.innerHTML += `<div>To save pos x and pos y press page down. When you drawing your array or drawings you need to save the pos</div>`
+cheatDiv.innerHTML += `<div>100 clicks per second</div>`
+cheatDiv.innerHTML += `<div>To draw your image open console (F12 or ctrl+shift+i) and write (without quotes): "customImage = yourimagearray" and press button custom image</div>`
 
-var multiclick = 50
 
-var posX = null;
-var posY = null;
+//cheatDiv.innerHTML +=`<div></div>`
+
+//cheatDiv.innerHTML += ``
+try {
+	document.getElementsByTagName("a")[0].remove();
+	document.getElementsByTagName("body")[0].getElementsByTagName("div")[4].remove()
+} catch (e) {}
+setTimeout(function() {
+	document.getElementsByTagName("body")[0].getElementsByTagName("div")[3].appendChild(cheatDiv)
+}, 2000)
+var moveInterval;
+var savedx;
+var savedy;
+var imagesToDraw = {
+	"cursorInRect": [[10,0,0,0],[7,3,10,0],[7,3,7,3],[7,7,7,3],[0,0,7,7],[12,-9,-4,-9],[12,-9,12,-9],[12,13,12,-9],[-3,13,12,13],[-4,13,-3,13],[-4,-9,-4,13],[1,7,-4,13],[12,13,1,7],[1,-4,-4,-9],[12,-9,1,-4]],
+	"cursor": [[10,0,0,0],[7,3,10,0],[7,7,7,3],[0,0,7,7]],
+	"arrowLeft": [[0,-6,-2,-4],[2,-4,0,-6],[0,0,0,-6]],
+	"arrowUp": [[-1,0,-6,0],[0,0,-1,0],[-4,-2,-6,0],[-4,2,-6,0]],
+	"arrowRight": [[0,6,0,0],[-2,4,0,6],[2,4,0,6]],
+	"arrowDown": [[0,0,6,0],[4,-2,6,0],[4,2,6,0]],
+	"cuteSmile": [[1,2,1,1],[2,2,1,2],[2,1,2,2],[1,1,2,1],[2,2,1,1],[1,2,2,1],[2,4,1,4],[2,5,2,4],[1,5,2,5],[1,4,1,5],[2,5,1,4],[1,5,2,4],[3,5,3,1],[4,5,3,5],[5,4,4,5],[5,3,5,4],[5,2,5,3],[4,1,5,2],[3,1,4,1]]
+}
+var alphabet = {
+	32: [],
+    33:[[0,1,1.5,1],[2,1,2.5,1]],//!
+    34:[[0,0.5,1,0.5],[0,1.25,1,1.25]],//"
+    35:[[0.5,-0.25,0.5,2.3],[1.5,-0.25,1.5,2.3],[-0.25,0.5,2.3,0.5],[-0.25,1.5,2.3,1.5]],//#
+    36:[[0,0,0,2],[1,0,1,2],[2,0,2,2],[0,0,1,0],[1,2,2,2],[-0.5,1,0,1],[2,1,2.5,1]],//$
+    37:[[1,0,0,0],[0,0,0,1],[0,1,2,1],[2,1,2,2],[2,2,1,2],[1,2,1,0],[2,0,0,2]],//% v1
+    //37:[[0,0,0,0.75],[0,0.75,0.75,0.75],[0.75,0.75,0.75,0],[0.75,0,0,0],[2,0,0,2],[1.25,1.25,1.25,2],[1.25,2,2,2],[2,2,2,1.25],[2,1.25,1.25,1.25]],//% v2
+    //37:[[1,0.5,0.5,0],[0.5,0,0,0.5],[0,0.5,0.5,1],[0.5,1,1,0.5],[2,0,0,2],[2,1.5,1.5,1],[1.5,1,1,1.5],[1,1.5,1.5,2],[1.5,2,2,1.5]],//% v3
+    38:[[0.5,1,0,1],[0,1,0,0],[0,0,2,0],[2,0,2,0.5],[2,0.5,1,1.5],[1,0,1,0.5],[1,0.5,2,1.5]],//&
+    39:[[0,0.5,1,0.5]], // '
+    40:[[0,2,0.5,1],[0.5,1,1.5,1],[1.5,1,2,2]],//(
+    41:[[0,0,0.5,1],[0.5,1,1.5,1],[1.5,1,2,0]],//)
+    42:[[0.5,0,1.5,2],[1.5,0,0.5,2],[0,1,2,1]],//*
+    43:[[0,1,2,1],[1,0,1,2]],//+
+    44:[[2,0,3,0]],//,
+    45:[[0.6,0.3,0.6,1.7]],//-
+    46:[[1.5,0,2,0]],//.
+    47:[[2,0.4,0,1.6]],//  /
+    48:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0],[2,0,0,2]],//0
+    49:[[0,1,2,1],[1,0,0,1],[2,0,2,2]],//1
+    50:[[0,0,0,2],[0,2,1,2],[1,2,1,0],[1,0,2,0],[2,0,2,2]],//2
+    51:[[0,0,0,2],[0,2,2,2],[2,2,2,0],[1,0,1,2]],
+    52:[[0,0,1,0],[1,0,1,2],[0,2,2,2]],
+    53:[[0,2,0,0],[0,0,1,0],[1,0,1,2],[1,2,2,2],[2,2,2,0]],
+    54:[[0,2,0,0],[0,0,2,0],[2,0,2,2],[2,2,1,2],[1,2,1,0]],
+    55:[[0,0,0,2],[0,2,2,0]],
+    56:[[0,0,0,2],[0,2,2,2],[2,2,2,0],[2,0,0,0],[1,0,1,2]],
+    57:[[0,0,1,0],[1,0,1,2],[0,2,2,2],[0,0,0,2],[2,0,2,2]],//9
+    58:[[0,1,0.5,1],[1.5,1,2,1]],//:
+    59:[[0,1,0.5,1],[2,1,3,1]],//;
+    60:[[0,2,1,0],[1,0,2,2]],//<
+    61:[[0.5,0,0.5,2],[1.5,0,1.5,2]],//=
+    62:[[0,0,1,2],[1,2,2,0]],//>
+    63:[[1,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,1],[1,1,1.5,1],[2,1,2.5,1]  ],//?
+    64:[[2.5,2,2.5,0],[2.5,0,-0.5,0],[-0.5,0,-0.5,2],[-0.5,2,1.5,2],[1.5,2,1.5,1],[1.5,1,0.5,1],[0.5,1,0.5,2]],//@
+    91:[[0,1.5,0,0.5],[0,0.5,2,0.5],[2,0.5,2,1.5]],// [
+    92:[[0,0.4,2,1.6]],// backslash
+    93:[[0,0.5,0,1.5],[0,1.5,2,1.5],[2,1.5,2,0.5]],// ]
+    94:[[1.5,0,0,1],[0,1,1.5,2]],//^
+    95:[[2,0,2,2] ],//_
+    96:[[0,0.5,1,0.5]], // ` display same as 39
+    97:[[2,0,0,0],[0,2,0,0],[0,2,2,2],[1,0,1,2]],//a
+    98:[[2,0,0,0],[0,0,0,1],[1,0,1,1],[2,0,2,1],[0,1,0.5,2],[0.5,2,1,1],[1,1,1.5,2],[1.5,2,2,1]],//b
+    99:[[2,2,2,0],[2,0,0,0],[0,0,0,2]],//c
+    100:[[2,0,0,0],[0,0,0,1],[0,1,1,2],[1,2,2,1],[2,1,2,0]],
+    101:[[2,2,2,0],[2,0,0,0],[0,0,0,2],[1,0,1,2]],
+    102:[[2,0,0,0],[0,0,0,2],[1,0,1,2]],
+    103:[[1,1,1,2],[1,2,2,2],[2,2,2,0],[2,0,0,0],[0,0,0,2]],
+    104:[[0,0,2,0],[0,2,2,2],[1,0,1,2]],
+    105:[[0,0,0,2],[0,1,2,1],[2,0,2,2]],
+    //106:[[0,0,0,2],[0,1,2,1],[2,0,2,1]], //j v1
+    106:[[1.5,0,2,0],[2,0,2,1.5],[0,1.5,2,1.5],[0,0.85,0,2.25]], //j v2
+    107:[[0,0,2,0],[1,0,0,2],[1,0,2,2]],
+    108:[[0,0,2,0],[2,0,2,2]],
+    109:[[0,0,2,0],[0,0,2,1],[2,1,0,2],[0,2,2,2]],
+    110:[[0,0,2,0],[0,0,2,2],[0,2,2,2]],
+    111:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0]],
+    112:[[2,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,0]],
+    113:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0],[1,1,2,2]],
+    114:[[2,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,0],[1,1,2,2]],
+    115:[[0,0,0,2],[1,0,1,2],[2,0,2,2],[0,0,1,0],[1,2,2,2]],
+    116:[[0,0,0,2],[0,1,2,1]],
+    117:[[0,0,2,0],[0,2,2,2],[2,0,2,2]],
+    118:[[0,0,2,1],[0,2,2,1]],
+    119:[[0,0,2,0],[0,2,2,2],[2,0,1,1],[2,2,1,1]],
+    120:[[0,0,2,2],[2,0,0,2]],
+    121:[[0,0,1,1],[0,2,1,1],[2,1,1,1]],
+    122:[[0,0,0,2],[0,2,2,0],[2,0,2,2]],//z
+    123:[[0,1.5,0,0.5],[0,0.5,0.5,0.5],[0.5,0.5,1,0],[1,0,1.5,0.5],[1.5,0.5,2,0.5],[2,0.5,2,1.5]],// {
+    124:[[0,1,2,1]],// |
+    125:[[0,0.5,0,1.5],[0,1.5,0.5,1.5],[0.5,1.5,1,2],[1,2,1.5,1.5],[1.5,1.5,2,1.5],[2,1.5,2,0.5]],// }
+    126:[[0.5,0,0,0.75],[0,0.75,0.5,1.5],[0.5,1.5,0,2.25]],// ~
+};
+
+function drawOnPlayer(x1, y1, x2, y2) {
+    var g = new ArrayBuffer(9)
+    var dv = new DataView(g);
+    var x = k;
+    var y = l
+
+    x1 = x + x1;
+    y1 = y + y1;
+    x2 = x + x2;
+    y2 = y + y2;
+
+    dv.setUint8(0, 3);
+    dv.setUint16(1, x1, !0);
+    dv.setUint16(3, y1, !0);
+    dv.setUint16(5, x2, !0);
+    dv.setUint16(7, y2, !0);
+    q.send(g)
+}
+
+function drawOnCoords(x1, y1, x2, y2) {
+	var g = new ArrayBuffer(9)
+	var dv = new DataView(g);
+
+	dv.setUint8(0, 3);
+	dv.setUint16(1, x1, !0);
+	dv.setUint16(3, y1, !0);
+	dv.setUint16(5, x2, !0);
+	dv.setUint16(7, y2, !0);
+	q.send(g)
+}
+
+function drawWord(str, x, y, fontSize = 2, kerning = 3, timeout = 250) {
+	str = str.trim()
+	if(str == undefined || str.length <= 0 || drawing == true || x == undefined || y == undefined) return;
+	var i = 0;
+	drawing = true;
+
+	function func() {
+		var letter = alphabet[str.toLowerCase().charCodeAt(i)] || alphabet[63] || []
+		for (var line of letter) {
+			var x1 = x + (line[1] + kerning * i) * fontSize;
+			var y1 = y + line[0] * fontSize;
+			var x2 = x + (line[3] + kerning * i) * fontSize;
+			var y2 = y + line[2] * fontSize;
+			drawOnCoords(x1, y1, x2, y2)
+		}
+		i++
+		if (str.charCodeAt(i)) {
+			setTimeout(func, timeout)
+		} else {
+			drawing = false;
+		}
+	}
+	func()
+}
+
+function drawArray(array, x = savedx, y = savedy, timeout = 70) {	
+	var scale = drawingScale;
+	var i = 0;
+	function func() {
+		drawOnCoords(x + array[i][1] * scale, y + array[i][0] * scale, x + array[i][3] * scale, y + array[i][2] * scale)
+		i++
+		if(i < array.length) setTimeout(func, timeout)
+	}
+	func()
+}
+
+function setMulticlick() {
+	var to = document.getElementById("multiclickcount").value;
+	multiclick = parseInt(to, 10)
+}
+
+var multiclick = 10
+
+function drawImage(img, x = savedx, y = savedy) {
+	switch(img.toLowerCase()) {
+		case "arrowleft":
+		drawArray(imagesToDraw.arrowLeft, k, l);
+		break;
+		case "arrowup":
+		drawArray(imagesToDraw.arrowUp, k, l);
+		break;
+		case "arrowdown":
+		drawArray(imagesToDraw.arrowDown, k, l);
+		break;
+		case "arrowright":
+		drawArray(imagesToDraw.arrowRight, k, l);
+		break;
+		case "cursorinrect":
+		drawArray(imagesToDraw.cursorInRect);
+		break;
+		case "cursor":
+		drawArray(imagesToDraw.cursor);
+		break;
+		case "cutesmile":
+		drawingScale *= 2
+		drawArray(imagesToDraw.cuteSmile);
+		drawingScale /= 2
+		break;
+		
+	}
+}
+
+window.addEventListener("keydown", function(key) {
+	switch(key.code) {
+		case "PageUp":
+			var message = document.getElementById("message").value;
+			var fontSize = document.getElementById("fontOfMessage").value;
+			drawWord(message, k, l, fontSize);
+		break;
+		case "PageDown":
+			savedx = k
+			savedy = l
+			console.log("saved position")
+		break;
+		case "ArrowLeft":
+		drawArray(imagesToDraw.arrowLeft, k, l);
+		break;
+		case "ArrowUp":
+		drawArray(imagesToDraw.arrowUp, k, l);
+		break;
+		case "ArrowDown":
+		drawArray(imagesToDraw.arrowDown, k, l);
+		break;
+		case "ArrowRight":
+		drawArray(imagesToDraw.arrowRight, k, l);
+		break;
+		default:
+		break;
+	}
+})
 
 function ra(a) {
     return a << 1
@@ -328,8 +574,6 @@ function ua(a, b) {
         for (var i = 0; i < multiclick; i++) {
 			setTimeout(function() {
 				q.send(c)
-				console.log(i)
-				
 			}, timeout)
 			timeout = timeout + 10
 		}
@@ -841,8 +1085,8 @@ Array.prototype.remove = function(a) {
     a = this.indexOf(a);
     return -1 != a ? (this.splice(a, 1), !0) : !1
 };
-window.onload = function() {
-    E = document.getElementById("canvas");
+setTimeout(function() {
+	E = document.getElementById("canvas");
     a = E.getContext("2d");
     x = document.getElementById("canvasContainer") || E;
     /*try {
@@ -864,6 +1108,6 @@ window.onload = function() {
     E.style.cursor = "none";
     Ia();
     y || socketConnect();
-    setInterval(J, 50);
+    moveInterval = setInterval(J, 50);
     window.requestAnimationFrame(la)
-}
+}, 2000)
