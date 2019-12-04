@@ -1,22 +1,270 @@
-// Hello scripter!
-// How are you? :P
-// Please don't change anything here unless you wanna ruin the fun for everyone.
 var serverurl = "wss://cursors--gabrielmakiewic.repl.co"
-var multiclick = 100
+//var serverurl = "ws://159.65.78.102:2828/"
+//var serverurl = "ws://mpp-proxy-new-8--gabrielmakiewic.repl.co/?target=ws://159.65.78.102:2828&origin=http://cursors.io"
+var drawing = false;
+var drawingScale = 1;
+var customImage = [];
+var cheatDiv = document.createElement("div");
+cheatDiv.style["border"] = "3px solid currentColor";
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += `<div>Message: <input id="message" placeholder="message"></input> Font: <input type="number" id="fontOfMessage" placeholder="font" value="2"></input></div>`
+cheatDiv.innerHTML += `<div>Set multiclick to: <input value="10" type="number" id="multiclickcount" placeholder="count"></input><button onclick="setMulticlick()">set</button></div>`
+cheatDiv.innerHTML +=`<div>Set drawing scale to: <input value="1" type="number" id="drawingscale" placeholder="scale"></input><button onclick="setDrawingScale()">set</button</div>`
+cheatDiv.innerHTML += `<div>Press to draw custom image: <button onclick="drawArray(customImage)">draw</button></div>`
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML +=`<div><font size="5px">Images:</font></div>`;
+cheatDiv.innerHTML +=`<div><button onclick="drawImage('cursorInRect')">cursor in rect</button><button onclick="drawImage('cursor')">cursor</button><button onclick="drawImage('cutesmile')">cutesmile</button></div>`
+cheatDiv.innerHTML += "<br>";
+cheatDiv.innerHTML += `<div><font size="5px">Instructons:</font></div>`
+cheatDiv.innerHTML += `<div>To draw message press page up</div>`
+cheatDiv.innerHTML += `<div>To draw arrows press they</div>`
+cheatDiv.innerHTML += `<div>To save pos x and pos y press page down. When you drawing your array or drawings you need to save the pos</div>`
+cheatDiv.innerHTML += `<div>100 clicks per second</div>`
+cheatDiv.innerHTML += `<div>To draw your image open console (F12 or ctrl+shift+i) and write (without quotes): "customImage = yourimagearray" and press button custom image</div>`
 
-var w = window,
-    z = document;
 
-function qa(a) {
-    return a << 1
+
+//cheatDiv.innerHTML +=`<div></div>`
+
+//cheatDiv.innerHTML += ``
+try {
+	document.getElementsByTagName("a")[0].remove();
+	document.getElementsByTagName("body")[0].getElementsByTagName("div")[4].remove()
+} catch (e) {}
+setTimeout(function() {
+	document.getElementsByTagName("body")[0].getElementsByTagName("div")[3].appendChild(cheatDiv)
+}, 2000)
+var moveInterval;
+var savedx;
+var savedy;
+var imagesToDraw = {
+	"cursorInRect": [[10,0,0,0],[7,3,10,0],[7,3,7,3],[7,7,7,3],[0,0,7,7],[12,-9,-4,-9],[12,-9,12,-9],[12,13,12,-9],[-3,13,12,13],[-4,13,-3,13],[-4,-9,-4,13],[1,7,-4,13],[12,13,1,7],[1,-4,-4,-9],[12,-9,1,-4]],
+	"cursor": [[10,0,0,0],[7,3,10,0],[7,7,7,3],[0,0,7,7]],
+	"arrowLeft": [[0,-6,-2,-4],[2,-4,0,-6],[0,0,0,-6]],
+	"arrowUp": [[-1,0,-6,0],[0,0,-1,0],[-4,-2,-6,0],[-4,2,-6,0]],
+	"arrowRight": [[0,6,0,0],[-2,4,0,6],[2,4,0,6]],
+	"arrowDown": [[0,0,6,0],[4,-2,6,0],[4,2,6,0]],
+	"cuteSmile": [[1,2,1,1],[2,2,1,2],[2,1,2,2],[1,1,2,1],[2,2,1,1],[1,2,2,1],[2,4,1,4],[2,5,2,4],[1,5,2,5],[1,4,1,5],[2,5,1,4],[1,5,2,4],[3,5,3,1],[4,5,3,5],[5,4,4,5],[5,3,5,4],[5,2,5,3],[4,1,5,2],[3,1,4,1]]
 }
+var alphabet = {
+	32: [],
+    33:[[0,1,1.5,1],[2,1,2.5,1]],//!
+    34:[[0,0.5,1,0.5],[0,1.25,1,1.25]],//"
+    35:[[0.5,-0.25,0.5,2.3],[1.5,-0.25,1.5,2.3],[-0.25,0.5,2.3,0.5],[-0.25,1.5,2.3,1.5]],//#
+    36:[[0,0,0,2],[1,0,1,2],[2,0,2,2],[0,0,1,0],[1,2,2,2],[-0.5,1,0,1],[2,1,2.5,1]],//$
+    37:[[1,0,0,0],[0,0,0,1],[0,1,2,1],[2,1,2,2],[2,2,1,2],[1,2,1,0],[2,0,0,2]],//% v1
+    //37:[[0,0,0,0.75],[0,0.75,0.75,0.75],[0.75,0.75,0.75,0],[0.75,0,0,0],[2,0,0,2],[1.25,1.25,1.25,2],[1.25,2,2,2],[2,2,2,1.25],[2,1.25,1.25,1.25]],//% v2
+    //37:[[1,0.5,0.5,0],[0.5,0,0,0.5],[0,0.5,0.5,1],[0.5,1,1,0.5],[2,0,0,2],[2,1.5,1.5,1],[1.5,1,1,1.5],[1,1.5,1.5,2],[1.5,2,2,1.5]],//% v3
+    38:[[0.5,1,0,1],[0,1,0,0],[0,0,2,0],[2,0,2,0.5],[2,0.5,1,1.5],[1,0,1,0.5],[1,0.5,2,1.5]],//&
+    39:[[0,0.5,1,0.5]], // '
+    40:[[0,2,0.5,1],[0.5,1,1.5,1],[1.5,1,2,2]],//(
+    41:[[0,0,0.5,1],[0.5,1,1.5,1],[1.5,1,2,0]],//)
+    42:[[0.5,0,1.5,2],[1.5,0,0.5,2],[0,1,2,1]],//*
+    43:[[0,1,2,1],[1,0,1,2]],//+
+    44:[[2,0,3,0]],//,
+    45:[[0.6,0.3,0.6,1.7]],//-
+    46:[[1.5,0,2,0]],//.
+    47:[[2,0.4,0,1.6]],//  /
+    48:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0],[2,0,0,2]],//0
+    49:[[0,1,2,1],[1,0,0,1],[2,0,2,2]],//1
+    50:[[0,0,0,2],[0,2,1,2],[1,2,1,0],[1,0,2,0],[2,0,2,2]],//2
+    51:[[0,0,0,2],[0,2,2,2],[2,2,2,0],[1,0,1,2]],
+    52:[[0,0,1,0],[1,0,1,2],[0,2,2,2]],
+    53:[[0,2,0,0],[0,0,1,0],[1,0,1,2],[1,2,2,2],[2,2,2,0]],
+    54:[[0,2,0,0],[0,0,2,0],[2,0,2,2],[2,2,1,2],[1,2,1,0]],
+    55:[[0,0,0,2],[0,2,2,0]],
+    56:[[0,0,0,2],[0,2,2,2],[2,2,2,0],[2,0,0,0],[1,0,1,2]],
+    57:[[0,0,1,0],[1,0,1,2],[0,2,2,2],[0,0,0,2],[2,0,2,2]],//9
+    58:[[0,1,0.5,1],[1.5,1,2,1]],//:
+    59:[[0,1,0.5,1],[2,1,3,1]],//;
+    60:[[0,2,1,0],[1,0,2,2]],//<
+    61:[[0.5,0,0.5,2],[1.5,0,1.5,2]],//=
+    62:[[0,0,1,2],[1,2,2,0]],//>
+    63:[[1,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,1],[1,1,1.5,1],[2,1,2.5,1]  ],//?
+    64:[[2.5,2,2.5,0],[2.5,0,-0.5,0],[-0.5,0,-0.5,2],[-0.5,2,1.5,2],[1.5,2,1.5,1],[1.5,1,0.5,1],[0.5,1,0.5,2]],//@
+    91:[[0,1.5,0,0.5],[0,0.5,2,0.5],[2,0.5,2,1.5]],// [
+    92:[[0,0.4,2,1.6]],// backslash
+    93:[[0,0.5,0,1.5],[0,1.5,2,1.5],[2,1.5,2,0.5]],// ]
+    94:[[1.5,0,0,1],[0,1,1.5,2]],//^
+    95:[[2,0,2,2] ],//_
+    96:[[0,0.5,1,0.5]], // ` display same as 39
+    97:[[2,0,0,0],[0,2,0,0],[0,2,2,2],[1,0,1,2]],//a
+    98:[[2,0,0,0],[0,0,0,1],[1,0,1,1],[2,0,2,1],[0,1,0.5,2],[0.5,2,1,1],[1,1,1.5,2],[1.5,2,2,1]],//b
+    99:[[2,2,2,0],[2,0,0,0],[0,0,0,2]],//c
+    100:[[2,0,0,0],[0,0,0,1],[0,1,1,2],[1,2,2,1],[2,1,2,0]],
+    101:[[2,2,2,0],[2,0,0,0],[0,0,0,2],[1,0,1,2]],
+    102:[[2,0,0,0],[0,0,0,2],[1,0,1,2]],
+    103:[[1,1,1,2],[1,2,2,2],[2,2,2,0],[2,0,0,0],[0,0,0,2]],
+    104:[[0,0,2,0],[0,2,2,2],[1,0,1,2]],
+    105:[[0,0,0,2],[0,1,2,1],[2,0,2,2]],
+    //106:[[0,0,0,2],[0,1,2,1],[2,0,2,1]], //j v1
+    106:[[1.5,0,2,0],[2,0,2,1.5],[0,1.5,2,1.5],[0,0.85,0,2.25]], //j v2
+    107:[[0,0,2,0],[1,0,0,2],[1,0,2,2]],
+    108:[[0,0,2,0],[2,0,2,2]],
+    109:[[0,0,2,0],[0,0,2,1],[2,1,0,2],[0,2,2,2]],
+    110:[[0,0,2,0],[0,0,2,2],[0,2,2,2]],
+    111:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0]],
+    112:[[2,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,0]],
+    113:[[2,0,0,0],[0,0,0,2],[0,2,2,2],[2,2,2,0],[1,1,2,2]],
+    114:[[2,0,0,0],[0,0,0,2],[0,2,1,2],[1,2,1,0],[1,1,2,2]],
+    115:[[0,0,0,2],[1,0,1,2],[2,0,2,2],[0,0,1,0],[1,2,2,2]],
+    116:[[0,0,0,2],[0,1,2,1]],
+    117:[[0,0,2,0],[0,2,2,2],[2,0,2,2]],
+    118:[[0,0,2,1],[0,2,2,1]],
+    119:[[0,0,2,0],[0,2,2,2],[2,0,1,1],[2,2,1,1]],
+    120:[[0,0,2,2],[2,0,0,2]],
+    121:[[0,0,1,1],[0,2,1,1],[2,1,1,1]],
+    122:[[0,0,0,2],[0,2,2,0],[2,0,2,2]],//z
+    123:[[0,1.5,0,0.5],[0,0.5,0.5,0.5],[0.5,0.5,1,0],[1,0,1.5,0.5],[1.5,0.5,2,0.5],[2,0.5,2,1.5]],// {
+    124:[[0,1,2,1]],// |
+    125:[[0,0.5,0,1.5],[0,1.5,0.5,1.5],[0.5,1.5,1,2],[1,2,1.5,1.5],[1.5,1.5,2,1.5],[2,1.5,2,0.5]],// }
+    126:[[0.5,0,0,0.75],[0,0.75,0.5,1.5],[0.5,1.5,0,2.25]],// ~
+};
+
+function drawOnPlayer(x1, y1, x2, y2) {
+    var g = new ArrayBuffer(9)
+    var dv = new DataView(g);
+    var x = k;
+    var y = l
+
+    x1 = x + x1;
+    y1 = y + y1;
+    x2 = x + x2;
+    y2 = y + y2;
+
+    dv.setUint8(0, 3);
+    dv.setUint16(1, x1, !0);
+    dv.setUint16(3, y1, !0);
+    dv.setUint16(5, x2, !0);
+    dv.setUint16(7, y2, !0);
+    q.send(g)
+}
+
+function drawOnCoords(x1, y1, x2, y2) {
+	var g = new ArrayBuffer(9)
+	var dv = new DataView(g);
+
+	dv.setUint8(0, 3);
+	dv.setUint16(1, x1, !0);
+	dv.setUint16(3, y1, !0);
+	dv.setUint16(5, x2, !0);
+	dv.setUint16(7, y2, !0);
+	q.send(g)
+}
+
+function drawWord(str, x, y, fontSize = 2, kerning = 3, timeout = 250) {
+	str = str.trim()
+	if(str == undefined || str.length <= 0 || drawing == true || x == undefined || y == undefined) return;
+	var i = 0;
+	drawing = true;
+
+	function func() {
+		var letter = alphabet[str.toLowerCase().charCodeAt(i)] || alphabet[63] || []
+		for (var line of letter) {
+			var x1 = x + (line[1] + kerning * i) * fontSize;
+			var y1 = y + line[0] * fontSize;
+			var x2 = x + (line[3] + kerning * i) * fontSize;
+			var y2 = y + line[2] * fontSize;
+			drawOnCoords(x1, y1, x2, y2)
+		}
+		i++
+		if (str.charCodeAt(i)) {
+			setTimeout(func, timeout)
+		} else {
+			drawing = false;
+		}
+	}
+	func()
+}
+
+function drawArray(array, x = savedx, y = savedy, timeout = 70) {	
+	var scale = drawingScale;
+	var i = 0;
+	function func() {
+		drawOnCoords(x + array[i][1] * scale, y + array[i][0] * scale, x + array[i][3] * scale, y + array[i][2] * scale)
+		i++
+		if(i < array.length) setTimeout(func, timeout)
+	}
+	func()
+}
+
+function setMulticlick() {
+	var to = document.getElementById("multiclickcount").value;
+	multiclick = parseInt(to, 10)
+}
+
+function setDrawingScale() {
+	var to = document.getElementById("drawingscale").value;
+	drawingScale = parseInt(to, 10)
+}
+
+var multiclick = 10
+
+function drawImage(img, x = savedx, y = savedy) {
+	switch(img.toLowerCase()) {
+		case "arrowleft":
+		drawArray(imagesToDraw.arrowLeft, k, l);
+		break;
+		case "arrowup":
+		drawArray(imagesToDraw.arrowUp, k, l);
+		break;
+		case "arrowdown":
+		drawArray(imagesToDraw.arrowDown, k, l);
+		break;
+		case "arrowright":
+		drawArray(imagesToDraw.arrowRight, k, l);
+		break;
+		case "cursorinrect":
+		drawArray(imagesToDraw.cursorInRect);
+		break;
+		case "cursor":
+		drawArray(imagesToDraw.cursor);
+		break;
+		case "cutesmile":
+		drawingScale *= 2
+		drawArray(imagesToDraw.cuteSmile);
+		drawingScale /= 2
+		break;
+		
+	}
+}
+
+window.addEventListener("keydown", function(key) {
+	switch(key.code) {
+		case "PageUp":
+			var message = document.getElementById("message").value;
+			var fontSize = document.getElementById("fontOfMessage").value;
+			drawWord(message, k, l, fontSize);
+		break;
+		case "PageDown":
+			savedx = k
+			savedy = l
+			console.log("saved position")
+		break;
+		case "ArrowLeft":
+		drawArray(imagesToDraw.arrowLeft, k, l);
+		break;
+		case "ArrowUp":
+		drawArray(imagesToDraw.arrowUp, k, l);
+		break;
+		case "ArrowDown":
+		drawArray(imagesToDraw.arrowDown, k, l);
+		break;
+		case "ArrowRight":
+		drawArray(imagesToDraw.arrowRight, k, l);
+		break;
+		default:
+		break;
+	}
+})
 
 function ra(a) {
     return a << 1
 }
 
 function S() {
-    return z.pointerLockElement === x || z.mozPointerLockElement === x || z.webkitPointerLockElement === x
+    return document.pointerLockElement === x || document.mozPointerLockElement === x || document.webkitPointerLockElement === x
 }
 
 function aa() {
@@ -24,41 +272,11 @@ function aa() {
     a.font = "35px NovaSquare";
     a.fillText("Please do not embed our website, thank you.", 400 - a.measureText("Please do not embed our website, thank you.").width / 2, 300);
     a.font = "16px NovaSquare";
-    a.fillText("Play the game on https://mcursors.netlify.com", 400 - a.measureText("Play the game on https://mcursors.netlify.com").width / 2, 330);
-    //top.location = "https://mcursors.netlify.com";
-    //throw "Please do not embed our website, thank you.";
+    a.fillText("Play the game on http://cursors.io/", 400 - a.measureText("Play the game on http://cursors.io/").width / 2, 330);
+    top.location = "http://cursors.io";
+    throw "Please do not embed our website, thank you.";
 }
 
-function sa(a) {
-    function T(a) {
-        if (S()) {
-            var b = a.webkitMovementX || a.mozMovementX || a.movementX || 0;
-            a = a.webkitMovementY || a.mozMovementY || a.movementY || 0;
-            300 > Math.abs(b) + Math.abs(a) && X(A + b, B + a)
-        } else a.offsetX ? X(a.offsetX, a.offsetY) : a.layerX && X(a.layerX, a.layerY);
-        if (y) k = p, l = s;
-        else if (Y(), !S() || p == k && s == l || (a = b = 0, p > k && (b = 1), s > l && (a = 1), p = k, s = l, A = (p << 1) + b, B = (s << 1) + a), W && (N != k || O != l) && 50 < t - da) {
-            b = N;
-            a = O;
-            var c = k,
-                d = l;
-            if (!y && null != q && q.readyState == WebSocket.OPEN) {
-                var f = new ArrayBuffer(9),
-                    e = new DataView(f);
-                e.setUint8(0, 3);
-                e.setUint16(1, b, !0);
-                e.setUint16(3, a, !0);
-                e.setUint16(5, c, !0);
-                e.setUint16(7, d, !0);
-                q.send(f)
-            }
-            N = k;
-            O = l;
-            da = t
-        }
-    }
-    T(a)
-}
 
 function U(a, b) {
     F = a;
@@ -91,17 +309,19 @@ function va(a) {
     W = !1
 }
 
-function ca() {
-    q = new WebSocket(serverurl);
-    q.binaryType = "arraybuffer";
-    q.onopen = wa;
-    q.onmessage = xa;
-    q.onclose = ya;
-    q.onerror = za
+
+function socketConnect() {
+        q = new WebSocket(serverurl);
+        q.binaryType = "arraybuffer";
+        q.onopen = onSocketConnect;
+        q.onmessage = socketOnMessage;
+        q.onclose = onSocketClose;
+        q.onerror = onSocketError
 }
 
+
 function Ba() {
-    w.localStorage && I && (w.localStorage.setItem("noCursorLock", I.checked ? "1" : "0"), w.localStorage.setItem("noDrawings", C.checked ? "1" : "0"))
+    window.localStorage && I && (window.localStorage.setItem("noCursorLock", I.checked ? "1" : "0"), window.localStorage.setItem("noDrawings", C.checked ? "1" : "0"))
 }
 
 function T(a) {
@@ -148,7 +368,10 @@ function Y() {
             c = k;
             var d = l,
                 f = [],
-                e = new Uint8Array(12E4);f.push([c, d]);e[c + 400 * d] = 1;do {
+                e = new Uint8Array(12E4);
+            f.push([c, d]);
+            e[c + 400 * d] = 1;
+            do {
                 var h = f.shift(),
                     g = h[0],
                     h = h[1];
@@ -165,7 +388,8 @@ function Y() {
                     e[g + 400 * (h - 1)] || (f.push([g, h - 1]), e[g + 400 * (h - 1)] = 1);
                     e[g + 400 * (h + 1)] || (f.push([g, h + 1]), e[g + 400 * (h + 1)] = 1)
                 }
-            } while (0 < f.length);c = {
+            } while (0 < f.length);
+            c = {
                 x: c,
                 y: d
             }
@@ -175,6 +399,15 @@ function Y() {
     }
     if (k != p || l != s) c = ea(k, l, p, s), k = c.x, l = c.y;
     fa(F, G, a, b) && !fa(F, G, k, l) && (J(a, b), J(k, l));
+    a: {
+        for (a = 0; a < m.length; a++)
+            if (b = m[a], 2 == b.type && !(k < b.x || l < b.y || k >= b.x + b.width || l >= b.y + b.height)) {
+                a = !0;
+                break a
+            }
+        a = !1
+    }
+    a && J()
 }
 
 function Z() {
@@ -184,18 +417,19 @@ function Z() {
     L = []
 }
 
-function wa() {
+function onSocketConnect() {
     Z();
     console.log("Connected!")
 }
 
-function ya(a) {
+function onSocketClose(e) {
     Z();
-    console.log("Socket closed: " + a.reason)
+    console.log("Socket closed: " + e.reason)
+	socketConnect()
 }
 
-function za(a) {
-    console.log("Socket error")
+function onSocketError(e) {
+    console.log("Socket error: " + e)
 }
 
 function Da(a, b) {
@@ -226,7 +460,8 @@ function Fa(a, b) {
     !C.checked && setTimeout(function() {
         for (var c = a.getUint16(b, !0), d = 0; d < c; d++) {
             var f = a.getUint16(b + 2 + 8 * d, !0),
-                e = a.getUint16(b + 4 + 8 * d, !0),
+                e = a.getUint16(b +
+                    4 + 8 * d, !0),
                 h = a.getUint16(b + 6 + 8 * d, !0),
                 g = a.getUint16(b + 8 + 8 * d, !0);
             L.push([f << 1, e << 1, h << 1, g << 1, t])
@@ -235,7 +470,7 @@ function Fa(a, b) {
     return b + 2 + 8 * a.getUint16(b, !0)
 }
 
-function xa(a) {
+function socketOnMessage(a) {
     a = a.data;
     var b = new DataView(a);
     switch (b.getUint8(0)) {
@@ -266,6 +501,7 @@ function xa(a) {
                         f.newX = h;
                         f.newY = g;
                         f.time = t
+						
                     } else v[f] = new ja(h, g)
             }
             for (e = 0; e < d.length; e++) delete v[d[e]];
@@ -295,14 +531,14 @@ function xa(a) {
                         }
                     e = {
                         id: e
-                    };m.push(e)
+                    };
+                    m.push(e)
                 }
                 c += 4;
-                console.log(a);
-                console.log(c);
                 c = ka(b, c, e)
             }
             c = Fa(b, c);
+            if (a.byteLength < c + 4) break;
             $ = b.getUint32(c, !0);
             break;
         case 4:
@@ -320,8 +556,7 @@ function xa(a) {
 }
 
 function J(a, b) {
-    if (!y && !H && null != q && q.readyState == WebSocket.OPEN && ("undefined" == typeof a && (a = k), "undefined" == typeof b && (b = l))) {
-        Y()
+    if (!y && !H && null != q && q.readyState == WebSocket.OPEN && ("undefined" == typeof a && (a = k), "undefined" == typeof b && (b = l), a != F || b != G)) {
         var c = new ArrayBuffer(9),
             d = new DataView(c);
         d.setUint8(0, 1);
@@ -336,13 +571,19 @@ function J(a, b) {
 
 function ua(a, b) {
     if (!y && null != q && q.readyState == WebSocket.OPEN) {
-        var c = new ArrayBuffer(9),
-            d = new DataView(c);
-        d.setUint8(0, 2);
-        d.setUint16(1, a, !0);
-        d.setUint16(3, b, !0);
-        d.setUint32(5, u, !0);
-        for (var i = 0; i < multiclick; i++) q.send(c) //multi click
+        var c = new ArrayBuffer(9);
+        var dv = new DataView(c);
+        dv.setUint8(0, 2);
+        dv.setUint16(1, a, !0);
+        dv.setUint16(3, b, !0);
+        dv.setUint32(5, u, !0);
+		var timeout = 10
+        for (var i = 0; i < multiclick; i++) {
+			setTimeout(function() {
+				q.send(c)
+			}, timeout)
+			timeout = timeout + 10
+		}
     }
 }
 
@@ -363,9 +604,7 @@ function ka(a, b, c) {
         b += 4;
         c.color = "#" + d
     }
-    console.log(b);
     var e = a.getUint8(b);
-    console.log(e);
     b += 1;
     c.type = e;
     switch (e) {
@@ -398,7 +637,7 @@ function ka(a, b, c) {
             break;
         case 2:
             d();
-            c.isBad = a.getUint8(b);
+            c.isBad = !!a.getUint8(b);
             b += 1;
             break;
         case 3:
@@ -456,7 +695,7 @@ function la() {
                 a.fillStyle = "#000000";
                 a.fillText(b.text, c, d)
             } else if (1 == b.type) a.fillStyle = b.color, a.fillRect(b.x << 1, b.y << 1, b.width << 1, b.height << 1), a.strokeStyle = "#000000", a.globalAlpha = .2, a.lineWidth = 2, a.strokeRect((b.x << 1) + 1, (b.y << 1) + 1, (b.width << 1) - 2, (b.height << 1) - 2), a.globalAlpha = 1;
-            else if (2 == b.type) a.fillStyle = b.isBad == 2 ? "#0000FF" : b.isBad == 1 ? "#FF0000" : "#00FF00", a.globalAlpha = .2, a.fillRect(b.x << 1, b.y << 1, b.width << 1, b.height << 1), a.globalAlpha = 1;
+            else if (2 == b.type) a.fillStyle = b.isBad ? "#FF0000" : "#00FF00", a.globalAlpha = .2, a.fillRect(b.x << 1, b.y << 1, b.width << 1, b.height << 1), a.globalAlpha = 1;
             else if (3 == b.type) {
                 var c = b.x << 1,
                     d = b.y << 1,
@@ -520,12 +759,12 @@ function la() {
             a.restore()
         }
         a.save();
-        for (var k in v) v.hasOwnProperty(k) && a.drawImage(M, qa(v[k].getX()) - 6, ra(v[k].getY()) - 6, 23, 30);
+        for (var k in v) v.hasOwnProperty(k) && a.drawImage(M, ra(v[k].getX()) - 6, ra(v[k].getY()) - 6, 23, 30);
         a.restore();
         na(!0)
     }
     a.restore();
-    w.requestAnimationFrame(la)
+    window.requestAnimationFrame(la)
 }
 
 function ma() {
@@ -556,9 +795,8 @@ function na(n) {
 }
 
 function ja(a, b) {
-	console.log(a, b)
-    this.oldX = this.newX = a;
-    this.oldY = this.newY = b;
+    posX = this.oldX = this.newX = a;
+    posY = this.oldY = this.newY = b;
     this.time = t
 }
 
@@ -609,7 +847,7 @@ function fa(a, b, c, d) {
 function P(a, b) {
     return 0 > a || 400 <= a || 0 > b || 300 <= b ? !0 : Q[a + 400 * b]
 }
-var Aa = "file:" == w.location.protocol,
+var Aa = "file:" == window.location.protocol,
     E, a, x, ha = 0,
     p = 0,
     s = 0,
@@ -624,7 +862,7 @@ var Aa = "file:" == w.location.protocol,
     M = new Image;
 M.src = "img/cursor.png";
 var Ha = M,
-    y = -1 != w.location.search.indexOf("editor"),
+    y = -1 != window.location.search.indexOf("editor"),
     D = [],
     L = [],
     t = 0,
@@ -643,7 +881,7 @@ var Ha = M,
     Q = new Uint8Array(12E4),
     m = [],
     K = [],
-    R = w.devicePixelRatio;
+    R = window.devicePixelRatio;
 Array.prototype.remove = function(a) {
     a = this.indexOf(a);
     return -1 != a ? (this.splice(a, 1), !0) : !1
@@ -657,13 +895,13 @@ ja.prototype = {
     time: 0,
     getX: function() {
         var a = this.newX - this.oldX,
-            b = (t - this.time) / 150,
+            b = (t - this.time) / 100,
             b = oa(0 >= b ? 0 : 1 <= b ? 1 : b);
         return this.oldX + b * a
     },
     getY: function() {
         var a = this.newY - this.oldY,
-            b = (t - this.time) / 150,
+            b = (t - this.time) / 100,
             b = oa(0 >= b ? 0 : 1 <= b ? 1 : b);
         return this.oldY + b * a
     }
@@ -729,15 +967,15 @@ var pa = function() {
             t = 150,
             v = new Uint8Array(1200),
             u = "#000000 #FF9999 #9999FF #FFFF99 #99FFFF #FF99FF #3333FF".split(" ");
-        z.addEventListener("mouseup", function() {
+        document.addEventListener("mouseup", function() {
             if (e) {
                 for (var a = n(), b = r, c = a.sy; c < a.fy; ++c)
                     for (var d = a.sx; d < a.fx; ++d) v[d + 40 * c] = b;
                 e = !1
             }
         });
-        z.addEventListener("mousemove", function() {});
-        w.generateCode = function() {
+        document.addEventListener("mousemove", function() {});
+        window.generateCode = function() {
             for (var a = "class Level? : public Level {\npublic:\n\tLevel?() : Level(" + q + ", " + t + "){}\n\n\tvoid OnInit(){\n", a = a + ("\t\tstd::vector<LevelObject*> wallByColor[" + u.length + "];\n"), b = new Uint8Array(1200), d = [], e = 0; 30 > e; ++e)
                 for (var f = 0; 40 > f; ++f)
                     if (!b[f + 40 * e]) {
@@ -750,7 +988,8 @@ var pa = function() {
                             a: for (; 30 > e;) {
                                 for (var p = h; p < k; ++p) {
                                     if (v[p + 40 * e] != g) break a;
-                                    if (b[p + 40 * e]) break a
+                                    if (b[p +
+                                            40 * e]) break a
                                 }
                                 for (p = h; p < k; ++p) b[p + 40 * e] = !0;
                                 ++e
@@ -767,10 +1006,11 @@ var pa = function() {
                         }
                     }
             for (b = 0; b < d.length; b++) e = d[b], 0 == e.color ? a += "\t\tAddObject(new ObjWall(" + e.x + ", " + e.y + ", " + e.width + ", " + e.height + ", 0x000000));\n" : (f = c(u[e.color]), a += "\t\twallByColor[" + e.color + "].push_back(AddObject(new ObjWall(" + e.x + ", " + e.y + ", " + e.width + ", " + e.height + ", " + f + ")));\n");
-            for (b = 0; b < m.length; b++) d = m[b], 0 != d.type && (2 == d.type ? a += "\t\tAddObject(new ObjTeleport(LevelManager::GetNextLevel(this), " + d.x + ", " + d.y + ", " + d.width + ", " + d.height + "));\n" : 3 == d.type ? (a += "\t\tAddObject(new ObjAreaCounter(wallByColor[" + d.colorCode + "], " + d.x + ", " + d.y + ", " + d.width + ", " + d.height + ", ", a += d.count + ", " + c(d.color) + "));\n") : 4 == d.type && (a += "\t\tAddObject(new ObjClickBox(wallByColor[" + d.colorCode + "], " + d.x + ", " + d.y + ", " + d.width + ", " + d.height + ", ", a += d.count + ", 1000, " + c(d.color) + "));\n"));
+            for (b = 0; b < m.length; b++) d = m[b], 0 != d.type && (2 == d.type ? a += "\t\tAddObject(new ObjTeleport(LevelManager::GetNextLevel(this), " +
+                d.x + ", " + d.y + ", " + d.width + ", " + d.height + "));\n" : 3 == d.type ? (a += "\t\tAddObject(new ObjAreaCounter(wallByColor[" + d.colorCode + "], " + d.x + ", " + d.y + ", " + d.width + ", " + d.height + ", ", a += d.count + ", " + c(d.color) + "));\n") : 4 == d.type && (a += "\t\tAddObject(new ObjClickBox(wallByColor[" + d.colorCode + "], " + d.x + ", " + d.y + ", " + d.width + ", " + d.height + ", ", a += d.count + ", 1000, " + c(d.color) + "));\n"));
             return a += "\t}\n};\n"
         };
-        z.addEventListener("keydown", function(a) {
+        document.addEventListener("keydown", function(a) {
             if (y) {
                 var b = a.keyCode;
                 65 == b ? (--r, 0 > r && (r = u.length)) : 83 == b ? (++r, r > u.length && (r = 0)) : 66 == b ? 1 >= r || m.push(d(40, 40, 5, 5, {
@@ -852,29 +1092,29 @@ Array.prototype.remove = function(a) {
     a = this.indexOf(a);
     return -1 != a ? (this.splice(a, 1), !0) : !1
 };
-w.onload = function() {
-    E = z.getElementById("canvas");
+setTimeout(function() {
+	E = document.getElementById("canvas");
     a = E.getContext("2d");
-    x = z.getElementById("canvasContainer") || E;
+    x = document.getElementById("canvasContainer") || E;
     /*try {
-    	w.top.location.origin != w.location.origin && aa()
+        window.top.location.origin != window.location.origin && aa()
     } catch (k) {
-    	aa()
+        aa()
     }*/
     E.width = 800 * R;
     E.height = 600 * R;
     a.scale(R, R);
-    x.onmousemove = sa;
+    x.onmousemove = T;
     x.onmousedown = ta;
     x.onmouseup = va;
-    I = z.getElementById("noCursorLock");
-    C = z.getElementById("noDrawings");
-    null != localStorage && (I.checked = "1" == localStorage.noCursorLock ? !0 : !1, C.checked = "1" == localStorage.noDrawings ? !0 : !1);
-    w.onbeforeunload = Ba;
+    I = document.getElementById("noCursorLock");
+    C = document.getElementById("noDrawings");
+    null != localStorage && (I.checked = "1" == window.localStorage.getItem("noCursorLock") ? !0 : !1, C.checked = "1" == window.localStorage.getItem("noDrawings") ? !0 : !1);
+    window.onbeforeunload = Ba;
     x.requestPointerLock = x.requestPointerLock || x.mozRequestPointerLock || x.webkitRequestPointerLock;
     E.style.cursor = "none";
     Ia();
-    y || ca();
-    setInterval(J, 50);
-    w.requestAnimationFrame(la)
-}
+    y || socketConnect();
+    moveInterval = setInterval(J, 50);
+    window.requestAnimationFrame(la)
+}, 2000)
