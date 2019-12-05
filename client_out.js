@@ -23,6 +23,7 @@ var cheats = {
 
 function loadHack(hack) {
 	if (hack == "zursor master" || hack == "zursor" || hack == "vnx first" || hack == "cursors drawer" || hack == "unknown guy hack") {
+		if(hack == "zursor" || hack == "zursor master") q.close()
 		loadScript(cheats[hack]);
 		disablebuttons();
 		console.log("loaded: " + hack)
