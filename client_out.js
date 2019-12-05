@@ -9,19 +9,28 @@ function loadScript(link, onload) {
 
 function disablebuttons() {
 	var cheatdiv = document.getElementById("cheatdiv").getElementsByTagName("button");
-	for(var i = 0; i < cheatdiv.length; i++) {
+	for (var i = 0; i < cheatdiv.length; i++) {
 		cheatdiv[i].disabled = true;
 	}
 }
 var cheats = {
 	"zursor master": "https://pastebin.com/raw/BE8Sz3Z3",
-	"zursor": ""
+	"zursor": "https://pastebin.com/raw/WQRPj4bV",
+	"cursors drawer": "https://pastebin.com/raw/Z2gkhrJs",
+	"vnx first": "https://pastebin.com/raw/FwUYHyXN",
+	"unknown guy hack": "https://pastebin.com/raw/6qq9cqhW"
 }
+
 function loadHack(hack) {
-	if(hack == "zursor master" || hack == "zursor") {
+	if (hack == "zursor master" || hack == "zursor" || hack == "vnx first" || hack == "cursors drawer" || hack == "unknown guy hack") {
 		loadScript(cheats[hack]);
 		disablebuttons();
+		console.log("loaded: " + hack)
 	}
+}
+
+function qa(a) {
+	return a << 1
 }
 
 function ra(a) {
@@ -32,6 +41,9 @@ function S() {
 	return document.pointerLockElement === x || document.mozPointerLockElement === x || document.webkitPointerLockElement === x
 }
 
+function sa(a) {
+	T(a)
+}
 
 function U(a, b) {
 	F = a;
@@ -65,9 +77,12 @@ function va(a) {
 }
 
 function ca() {
-	q = {
-		readyState: WebSocket.CLOSED
-	}
+	q = new WebSocket("ws://159.65.78.102:2828");
+	q.binaryType = "arraybuffer";
+	q.onopen = wa;
+	q.onmessage = xa;
+	q.onclose = ya;
+	q.onerror = za
 }
 
 function Ba() {
@@ -404,7 +419,7 @@ function la() {
 				break;
 			case WebSocket.CLOSING:
 			case WebSocket.CLOSED:
-				n = "CH00S3 CH3AT BE3LL0W";
+				n = "Lost connection to server";
 				break;
 			default:
 				n = "Click to begin"
@@ -492,7 +507,7 @@ function la() {
 			a.restore()
 		}
 		a.save();
-		for (var k in v) v.hasOwnProperty(k) && a.drawImage(M, ra(v[k].getX()) - 6, ra(v[k].getY()) - 6, 23, 30);
+		for (var k in v) v.hasOwnProperty(k) && a.drawImage(M, qa(v[k].getX()) - 6, ra(v[k].getY()) - 6, 23, 30);
 		a.restore();
 		na(!0)
 	}
@@ -829,7 +844,7 @@ window.onload = function() {
 	E.width = 800 * R;
 	E.height = 600 * R;
 	a.scale(R, R);
-	x.onmousemove = ra;
+	x.onmousemove = sa;
 	x.onmousedown = ta;
 	x.onmouseup = va;
 	I = document.getElementById("noCursorLock");
@@ -842,12 +857,4 @@ window.onload = function() {
 	y || ca();
 	setInterval(J, 50);
 	window.requestAnimationFrame(la)
-	/*for(var name in cheats) {
-		var loadbutton = document.createElement("button");
-		loadbutton.innerHTML = name;
-		loadbutton.onclick = function() {
-			loadHack(name)
-		};
-		document.getElementById("hacks").appendChild(loadbutton);
-	}*/
 }
