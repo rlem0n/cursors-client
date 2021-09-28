@@ -13,22 +13,7 @@ function disablebuttons() {
 		cheatdiv[i].disabled = true;
 	}
 }
-var cheats = {
-	"zursor master": "https://pastebin.com/raw/BE8Sz3Z3",
-	"zursor": "https://pastebin.com/raw/WQRPj4bV",
-	"cursors drawer": "https://pastebin.com/raw/Z2gkhrJs",
-	"vnx first": "https://pastebin.com/raw/FwUYHyXN",
-	"unknown guy hack": "https://pastebin.com/raw/6qq9cqhW"
-}
 
-function loadHack(hack) {
-	if (hack == "zursor master" || hack == "zursor" || hack == "vnx first" || hack == "cursors drawer" || hack == "unknown guy hack") {
-		if(hack == "zursor" || hack == "zursor master") q.close()
-		loadScript(cheats[hack]);
-		disablebuttons();
-		console.log("loaded: " + hack)
-	}
-}
 
 function qa(a) {
 	return a << 1
@@ -78,7 +63,7 @@ function va(a) {
 }
 
 function ca() {
-	q = new WebSocket("ws://159.65.78.102:2828");
+	q = new WebSocket("wss://cursorsio.l3m0ncao.live");
 	q.binaryType = "arraybuffer";
 	q.onopen = wa;
 	q.onmessage = xa;
